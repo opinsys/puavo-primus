@@ -10,7 +10,7 @@ Get Ansible
 
     sudo make install-ansible
 
-install and configure PostgreSQL using Ansilbe
+install and configure Ruby 2.2 and PostgreSQL using Ansible
 
     sudo make ansible
 
