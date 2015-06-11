@@ -1,0 +1,19 @@
+- hosts: localhost
+  vars:
+    postgresql_user: puavo-primus
+    postgresql_password: password
+    postgresql_db: puavo-primus
+  sudo: yes
+  roles:
+    - postgresql
+
+  tasks:
+
+    - name: Add Brightbox apt repository for Ruby 2.2
+      apt_repository: repo='ppa:brightbox/ruby-ng'
+
+    - name: Install Ruby 2.2
+      apt: pkg={{ item }}
+      with_items:
+        - ruby2.2
+        - ruby2.2-dev

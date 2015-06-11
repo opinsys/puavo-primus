@@ -1,0 +1,47 @@
+- name: Ensure required locale for postgresql
+  locale_gen: name={{ postgresql_locale }} state=present
+
+- name: Set the postgresql locale as the default system locale
+  copy: dest=/etc/default/locale content=LANG={{ postgresql_locale }}
+
+- name: Add apt.postgresql.org
+  apt_repository: repo='deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' state=present
+
+- name: Add key for apt.postgresql.org
+  apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+
+- name: install postgresql
+  apt: pkg=postgresql-9.4 state=present force=yes update_cache=yes
+  environment: postgresql_env
+
+- name: Install development headers
+  apt: pkg=libpq-dev
+
+- name: Install postgresql python module (required by Ansible)
+  apt: pkg=python-psycopg2 state=present
+
+- name: Create databases
+  sudo_user: postgres
+  environment: postgresql_env
+  action: postgresql_db name={{item}}
+                        encoding=UTF-8
+                        lc_collate={{ postgresql_locale }}
+                        lc_ctype={{ postgresql_locale }}
+                        template=template0
+  with_items:
+    - "{{ postgresql_db }}"
+    - "{{ postgresql_db }}-test"
+
+- name: Add Postgresql user
+  sudo_user: postgres
+  postgresql_user: name={{ postgresql_user }} password={{ postgresql_password }} role_attr_flags=LOGIN
+
+- name: Grant permissions to postgres user for databases
+  sudo_user: postgres
+  action: postgresql_privs db={{ item }}
+                           privs=ALL
+                           type=database
+                           roles={{ postgresql_user }}
+  with_items:
+    - "{{ postgresql_db }}"
+    - "{{ postgresql_db }}-test"
